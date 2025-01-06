@@ -6,7 +6,7 @@ let categorySchema = Schema(
         name: {
             type: String,
             minLength: [3, 'Nama kategori minimal 3 karakter!'],
-            maxLength: [20, 'Nama kategori maksimal 3 karakter!'],
+            maxLength: [20, 'Nama kategori maksimal 20 karakter!'],
             required: [true, 'Nama kategori harus diisi!'],
         },
         organizer: {
