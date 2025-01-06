@@ -6,7 +6,7 @@ const { NotFoundError, BadRequestError } = require('../../errors');
 const getAllTalents = async (req) => {
     const { keyword } = req.query;
 
-    let condition = {};
+    let condition = { organizer: req.user.organizer };
 
     if (keyword) {
         condition = {
@@ -30,7 +30,18 @@ const getAllTalents = async (req) => {
 
 const findTalent = async (req) => {
     const { id } = req.params;
-    const result = await checkingTalent(id);
+
+    const result = await Talents.findOne({
+        _id: id,
+        organizer: req.user.organizer,
+    })
+        .populate({
+            path: 'image',
+            select: '_id name',
+        })
+        .select('_id name role image');
+    if (!result) throw new NotFoundError(`Tidak ada talent dengan id: ${id}`);
+
     return result;
 };
 
@@ -39,10 +50,18 @@ const createTalent = async (req) => {
 
     await checkingImage(image);
 
-    const check = await Talents.findOne({ name });
+    const check = await Talents.findOne({
+        name,
+        organizer: req.user.organizer,
+    });
     if (check) throw new BadRequestError('Nama talent duplikat!');
 
-    const result = await Talents.create({ name, image, role });
+    const result = await Talents.create({
+        name,
+        image,
+        role,
+        organizer: req.user.organizer,
+    });
 
     return result;
 };
@@ -56,13 +75,19 @@ const updateTalent = async (req) => {
 
     const checkTitle = await Talents.findOne({
         name,
+        organizer: req.user.organizer,
         _id: { $ne: id },
     });
     if (checkTitle) throw new BadRequestError('Nama talent duplikat!');
 
     const result = await Talents.findOneAndUpdate(
         { _id: id },
-        { name, image, role },
+        {
+            name,
+            image,
+            role,
+            organizer: req.user.organizer,
+        },
         { new: true, runValidators: true }
     );
 
@@ -72,7 +97,11 @@ const updateTalent = async (req) => {
 const destroyTalent = async (req) => {
     const { id } = req.params;
 
-    const result = await checkingTalent(id);
+    const result = await Talents.findOne({
+        _id: id,
+        organizer: req.user.organizer,
+    });
+    if (!result) throw new NotFoundError(`Tidak ada talent dengan id: ${id}`);
 
     await result.deleteOne();
 
