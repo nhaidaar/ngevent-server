@@ -22,7 +22,10 @@ const findCategory = async (req) => {
 const createCategory = async (req) => {
     const { name } = req.body;
 
-    const check = await Categories.findOne({ name: name });
+    const check = await Categories.findOne({
+        name: name,
+        organizer: req.user.organizer,
+    });
     if (check) throw new BadRequestError('Kategori nama duplikat!');
 
     const result = await Categories.create({
