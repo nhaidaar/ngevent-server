@@ -61,4 +61,16 @@ const destroy = async (req, res, next) => {
     }
 };
 
-module.exports = { index, find, create, update, destroy };
+const changeStatus = async (req, res, next) => {
+    try {
+        const result = await Events.changeStatusEvents(req);
+
+        res.status(StatusCodes.OK).json({
+            data: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+module.exports = { index, find, create, update, destroy, changeStatus };

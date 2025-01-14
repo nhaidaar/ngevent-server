@@ -6,12 +6,18 @@ const { checkingTalent } = require('./talents');
 const { NotFoundError, BadRequestError } = require('../../errors');
 
 const getAllEvents = async (req) => {
-    const { keyword, category, talent } = req.query;
+    const { keyword, category, talent, status } = req.query;
     let condition = { organizer: req.user.organizer };
 
     if (keyword) condition = { ...condition, title: { $regex: keyword, $options: 'i' } };
     if (category) condition = { ...condition, category: category };
     if (talent) condition = { ...condition, talent: talent };
+    if (['Draft', 'Published'].includes(status)) {
+        condition = {
+            ...condition,
+            statusEvent: status,
+        };
+    };
 
     const result = await Events.find(condition)
         .populate({ path: 'image', select: '_id name' })
@@ -160,10 +166,36 @@ const destroyEvent = async (req) => {
     return result;
 };
 
+const changeStatusEvents = async (req) => {
+    const { id } = req.params;
+    const { statusEvent } = req.body;
+
+    if (!['Draft', 'Published'].includes(statusEvent)) {
+        throw new BadRequestError('Status harus Draft atau Published');
+    }
+
+    // cari event berdasarkan field id
+    const checkEvent = await Events.findOne({
+        _id: id,
+        organizer: req.user.organizer,
+    });
+
+    // jika id result false / null maka akan menampilkan error `Tidak ada acara dengan id` yang dikirim client
+    if (!checkEvent)
+        throw new NotFoundError(`Tidak ada acara dengan id :  ${id}`);
+
+    checkEvent.statusEvent = statusEvent;
+
+    await checkEvent.save();
+
+    return checkEvent;
+};
+
 module.exports = {
     getAllEvents,
     createEvent,
     findEvent,
     updateEvent,
     destroyEvent,
+    changeStatusEvents,
 };
