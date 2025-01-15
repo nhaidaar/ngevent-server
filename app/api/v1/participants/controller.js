@@ -74,6 +74,30 @@ const getDetailLandingPage = async (req, res, next) => {
     }
 };
 
+const getAllPayment = async (req, res, next) => {
+    try {
+        const result = await Participants.getAllPaymentByOrganizer(req);
+
+        res.status(StatusCodes.OK).json({
+            data: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+const checkout = async (req, res, next) => {
+    try {
+        const result = await Participants.checkoutOrder(req);
+
+        res.status(StatusCodes.CREATED).json({
+            data: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
     signup,
     activeParticipant,
@@ -81,4 +105,6 @@ module.exports = {
     getAllLandingPage,
     getDetailLandingPage,
     getDashboard,
+    checkout,
+    getAllPayment,
 };
